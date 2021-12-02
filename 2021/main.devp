@@ -1,4 +1,31 @@
+#func main;
+
 import iofile as io;
+
+class AOCLogger {
+    indentation: num => 0;
+
+    md log<msg> {
+        if (indentation == 0) {
+            println(msg);
+        } else {
+            for (_ -> 0:indentation) {
+                print("  ");
+            }
+            println("- " + msg);
+        }
+    }
+
+    md indent {
+        indentation++;
+    }
+
+    md outdent {
+        indentation--;
+        println("");
+    }
+}
+const Logger => AOCLogger();
 
 class Helper {
 
@@ -26,6 +53,16 @@ class DayOne {
     mthd stc partTwo = num {
         return Helper::sumsLessThan(Helper::slidingThrees(DayOne::numbers));
     }
+
+    mthd stc main {
+        Logger::log("Day One:");
+        Logger::indent();
+        Logger::log("Part One: " + DayOne::partOne());
+        Logger::log("Part Two: " + DayOne::partTwo());
+        Logger::outdent();
+    }
 }
 
-println(DayOne::partOne());
+fn main<args #list> {
+    DayOne::main();
+}
