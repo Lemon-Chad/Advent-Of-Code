@@ -1,26 +1,31 @@
 import iofile as io;
 
-let numbers => for (x <- io::readFile("1.txt").split("\n")) => parseNum(x);
+class Helper {
 
-fn sumsLessThan<lis #list> = num {
-    let sum => 0;
-    for (i -> 0 : --(lis.size())) {
-        if (lis[i] < lis[++i])
-            sum++;
+    mthd stc sumsLessThan<lis #list> = num {
+        let sum => 0;
+        for (i -> 0 : --(lis.size())) {
+            if (lis[i] < lis[++i])
+                sum++;
+        }
+        return sum;
     }
-    return sum;
+
+    mthd stc slidingThrees<lis #list> = list -> for (i -> 0 : (lis.size()) - 2) => lis[i] + lis[i + 1] + lis[i + 2];
+
 }
 
-fn slidingThrees<lis #list> = list -> for (i -> 0 : (lis.size()) - 2) => lis[i] + lis[i + 1] + lis[i + 2];
+class DayOne {
+    stc numbers: num => for (x <- io::readFile("1.txt").split("\n")) => parseNum(x);
 
 
-fn partOne = num {
-    return sumsLessThan(numbers);
+    mthd stc partOne = num {
+        return Helper::sumsLessThan(DayOne::numbers);
+    }
+
+    mthd stc partTwo = num {
+        return Helper::sumsLessThan(Helper::slidingThrees(DayOne::numbers));
+    }
 }
 
-fn partTwo = num {
-    return sumsLessThan(slidingThrees(numbers));
-}
-
-println(partOne());
-println(partTwo());
+println(DayOne::partOne());
