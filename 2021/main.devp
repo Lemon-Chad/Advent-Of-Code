@@ -1,11 +1,12 @@
 #func main;
 
 import iofile as io;
+const { * } => import std;
 
 class AOCLogger {
     indentation: num => 0;
 
-    md log<msg> {
+    mthd log<msg> {
         if (indentation == 0) {
             println(msg);
         } else {
@@ -16,11 +17,11 @@ class AOCLogger {
         }
     }
 
-    md indent {
+    mthd indent {
         indentation++;
     }
 
-    md outdent {
+    mthd outdent {
         indentation--;
         println("");
     }
@@ -42,8 +43,9 @@ class Helper {
 
 }
 
+<> Advent of Code 2021 - Day 1
 class DayOne {
-    stc numbers: num => for (x <- io::readFile("1.txt").split("\n")) => parseNum(x);
+    stc numbers: list => for (x <- io::readFile("inputs/1.txt").split("\n")) => parseNum(x);
 
 
     mthd stc partOne = num {
@@ -63,6 +65,67 @@ class DayOne {
     }
 }
 
+<> Advent of Code 2021 - Day 2
+class DayTwo {
+    stc movements: list => 
+        for (x <- io::readFile("inputs/2.txt").split("\n")) => 
+            Tuple(
+                (var y => x.split(" "))[0], 
+                parseNum(y[1])
+            );
+
+    mthd stc partOne = num {
+        let x => 0;
+        let depth => 0;
+        
+        for (movement <- DayTwo::movements) {
+            let offs => *movement[1];
+            let dir => *movement[0];
+
+            match (dir) {
+                "forward" -> x += offs;
+                "down" -> depth += offs;
+                "up" -> depth -= offs;
+                default -> throw "Invalid direction";
+            };
+        }
+
+        return x * depth;
+    }
+
+    mthd stc partTwo {
+        let x => 0;
+        let depth => 0;
+        let aim => 0;
+
+        for (movement <- DayTwo::movements) {
+            let offs => *movement[1];
+            let dir => *movement[0];
+
+            match (dir) {
+                "forward" -> scope {
+                    x += offs;
+                    depth += offs * aim;
+                }
+                "down" -> aim += offs;
+                "up" -> aim -= offs;
+            };
+        }
+
+        return x * depth;
+    }
+
+    mthd stc main {
+        Logger::log("Day Two:");
+        Logger::indent();
+        Logger::log("Part One: " + DayTwo::partOne());
+        Logger::log("Part Two: " + DayTwo::partTwo());
+        Logger::outdent();
+    }
+
+}
+
 fn main<args #list> {
     DayOne::main();
+    DayTwo::main();
 }
