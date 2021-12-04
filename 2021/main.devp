@@ -41,6 +41,52 @@ class Helper {
 
     mthd stc slidingThrees<lis #list> = list -> for (i -> 0 : (lis.size()) - 2) => lis[i] + lis[i + 1] + lis[i + 2];
 
+    mthd stc bitCount<lis #list, index #num> = ([num][num]) {
+        let ones => 0;
+        let zeros => 0;
+
+        for (x <- lis)
+            if (x[index] == '1')
+                ones++;
+            else
+                zeros++;
+
+        return Tuple(ones, zeros);
+    }
+
+    mthd stc bitCriteria<lis #list, criteria #function> = String {
+        for (i -> 0:lis[0].size()) {
+            if ((lis.size()) == 1) break;
+            let tup => Helper::bitCount(lis, i);
+            
+            let newLis => [];
+            for (x <- lis) {
+                if (criteria(x[i], *tup[0] >= *tup[1]))
+                    newLis.append(x);
+            }
+            lis => newLis;
+        }
+        return lis[0];
+    }
+
+    mthd stc binaryToDecimal<str #String> = num {
+        let sum => 0;
+
+        let o => 0;
+        for (i -> 0 : str.size()) {
+            let char => str[-i - 1];
+
+            if (char != '0' & char != '1') {
+                o++;
+                continue;
+            }
+
+            sum += (char == '1') * (2 ^ (i - o));
+        }
+
+        return sum;
+    }
+
 }
 
 <> Advent of Code 2021 - Day 1
@@ -125,7 +171,49 @@ class DayTwo {
 
 }
 
+class DayThree {
+    stc input: list => io::readFile("inputs/3.txt").split("\n");
+
+    mthd stc partOne = num {
+        let gammaStr => "";
+        let epsilonStr => "";
+
+        let inpSize => --(DayThree::input[0].size());
+        for (i -> 0:inpSize) {
+            let tup => Helper::bitCount(DayThree::input, i);
+            let ones => *tup[0];
+            let zeros => *tup[1];
+            
+            gammaStr += ? (ones > zeros): '1' 
+                        $_: '0';
+            epsilonStr += ? (ones < zeros): '1' 
+                        $_: '0';
+        }
+
+        let gamma => Helper::binaryToDecimal(gammaStr);
+        let epsilon => Helper::binaryToDecimal(epsilonStr);
+
+        return gamma * epsilon;
+    }
+
+    mthd stc partTwo = num {
+        let oxygen => Helper::bitCriteria(DayThree::input, !<x, isOne> -> (x == '1') == ( isOne));
+        let carbon => Helper::bitCriteria(DayThree::input, !<x, isOne> -> (x == '1') == (!isOne));
+
+        return Helper::binaryToDecimal(carbon) * Helper::binaryToDecimal(oxygen);
+    }
+
+    mthd stc main {
+        Logger::log("Day Three:");
+        Logger::indent();
+        Logger::log("Part One: " + DayThree::partOne());
+        Logger::log("Part Two: " + DayThree::partTwo());
+        Logger::outdent();
+    }
+}
+
 fn main<args #list> {
     DayOne::main();
     DayTwo::main();
+    DayThree::main();
 }
