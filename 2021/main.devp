@@ -87,6 +87,53 @@ class Helper {
         return sum;
     }
 
+    mthd stc parseCoordinate<str #String> = ([num][num]) {
+        let pair => str.split(",");
+        Tuple(parseNum(pair[0]), parseNum(pair[1]))
+    }
+
+    mthd stc rightmost<points #list> = num {
+        let max => 0;
+        for (p <- points) {
+            if (*p[0] > max)
+                max => *p[0];
+        }
+        max
+    }
+
+    mthd stc downmost<points #list> = num {
+        let max => 0;
+        for (p <- points) {
+            if (*p[1] > max)
+                max => *p[1];
+        }
+        max
+    }
+
+    mthd stc leftPoint<a, b> = ([num][num]) ->
+        ? (*a[0] < *b[0]):
+            *a
+        $_:
+            *b;
+
+    mthd stc rightPoint<a, b> = ([num][num]) ->
+        ? (*a[0] > *b[0]):
+            *a
+        $_:
+            *b;
+
+    mthd stc upPoint<a, b> = ([num][num]) ->
+        ? (*a[1] < *b[1]):
+            *a
+        $_:
+            *b;
+
+    mthd stc downPoint<a, b> = ([num][num]) ->
+        ? (*a[1] > *b[1]):
+            *a
+        $_:
+            *b;
+
 }
 
 <> Advent of Code 2021 - Day 1
@@ -212,8 +259,251 @@ class DayThree {
     }
 }
 
+obj Board {
+    prv board: list;
+    prv marked: list;
+    prv lastNum: num;
+
+    ingredients<board #list> {
+        attr board => board;
+        attr marked => for (_ -> 0:25) => &false;
+        attr lastNum => 0;
+    }
+
+    mthd mark<number #num> = void {
+        let index => board.indexOf(number);
+        if (index == -1) {
+            return null;
+        }
+        marked[index] => true;
+        lastNum => number;
+    }
+
+    mthd hasWon = bool {
+        for (i -> 0:5)
+            if (marked[i] & marked[i + 5] & marked[i + 10] & marked[i + 15] & marked[i + 20])
+                return true;
+            elif (marked[i * 5] & marked[i * 5 + 1] & marked[i * 5 + 2] & marked[i * 5 + 3] & marked[i * 5 + 4])
+                return true;
+        false
+    }
+
+    mthd score = num {
+        let unmarkedSum => 0;
+        for (i -> 0:25)
+            if (!marked[i])
+                unmarkedSum += board[i];
+        return unmarkedSum * lastNum;
+    }
+
+    mthd getBoard = list {
+        return board;
+    }
+
+    mthd getMarked = list {
+        return marked;
+    }
+
+    mthd getLastNum = num {
+        return lastNum;
+    }
+    
+    mthd bin eq<other> -> board == other::getBoard() & marked == other::getMarked() & lastNum == other::getLastNum();
+
+}
+
+class DayFour {
+    stc numbers: list => for (x <- (io::readFile("inputs/4.txt").split("\n"))[0].split(",")) => parseNum(x);
+    stc boards: list => scope {
+        let lines => io::readFile("inputs/4.txt").split("\n");
+        lines => lines.sublist(1, lines.size());
+        let boards => [];
+        for (i -> 0:(lines.size()) / 6) {
+            let board => [];
+            for (j -> 1:6) {
+                let line => lines[i * 6 + j];
+                for (k <- line.split(" ")) {
+                    if ((k.size()) == 0) continue;
+                    board.append(parseNum(k));
+                }
+            }
+            boards.append(Board(board));
+        }
+        boards
+    }
+
+    mthd stc partOne = num {
+        for (number <- DayFour::numbers) {
+            for (board <- DayFour::boards) {
+                board::mark(number);
+                if (board::hasWon()) return board::score();
+            }
+        }
+        0
+    }
+
+    mthd stc partTwo = num {
+        let boards => DayFour::boards;
+        for (number <- DayFour::numbers) {
+            for (board <- boards) {
+                board::mark(number);
+                if (board::hasWon()) {
+                    if ((boards.size()) == 1) return board::score();
+                    boards /= board;
+                }
+            }
+        }
+        0
+    }
+
+    mthd stc main {
+        Logger::log("Day Four:");
+        Logger::indent();
+        Logger::log("Part One: " + DayFour::partOne());
+        Logger::log("Part Two: " + DayFour::partTwo());
+        Logger::outdent();
+    }
+
+}
+
+class DayFive {
+    stc lines: list => for (x <- io::readFile("inputs/5.txt").split("\n")) => scope {
+        let pair => x.split(" -> ");
+        let left => Helper::parseCoordinate(pair[0]);
+        let right => Helper::parseCoordinate(pair[1]);
+        Tuple(left, right)
+    }
+
+    mthd stc flattenedList = list {
+        let lis => [];
+        for (tup <- DayFive::lines) {
+            lis.append(tup[0]);
+            lis.append(tup[1]);
+        }
+        lis
+    }
+
+    mthd stc partOne = num {
+        let flattenedList => DayFive::flattenedList();
+        let y => 1000;
+        let x => 1000;
+
+        let map => for (i -> 0:x) => for (j -> 0:y) => &0;
+
+        for (line <- DayFive::lines) {
+            let x1 => *line[0][0];
+            let y1 => *line[0][1];
+            let x2 => *line[1][0];
+            let y2 => *line[1][1];
+
+            if (x1 == x2) {
+                let left => ?(y1 < y2): y1 
+                            $_: y2;
+                let right => ?(y1 < y2): y2 
+                            $_: y1;
+
+                for (i -> left:++right) {
+                    map[i][x1]++;
+                }
+            } elif (y1 == y2) {
+                let top => ?(x1 < x2): x1 
+                            $_: x2;
+                let bottom => ?(x1 < x2): x2
+                            $_: x1;
+
+                for (i -> top:++bottom) {
+                    map[y1][i]++;
+                }
+            }
+        }
+
+        
+
+        let count => 0;
+        for (j -> 0:y) {
+            for (i -> 0:x) {
+                if (*map[i][j] > 1) count += 1;
+            }
+        }
+        count
+    }
+
+    mthd stc partTwo = num {
+        let flattenedList => DayFive::flattenedList();
+        let y => 1000;
+        let x => 1000;
+
+        let map => for (i -> 0:x) => for (j -> 0:y) => &0;
+
+        for (line <- DayFive::lines) {
+            let x1 => *line[0][0];
+            let y1 => *line[0][1];
+            let x2 => *line[1][0];
+            let y2 => *line[1][1];
+
+            if (x1 == x2) {
+                let left => ?(y1 < y2): y1 
+                            $_: y2;
+                let right => ?(y1 < y2): y2 
+                            $_: y1;
+
+                for (i -> left:++right) {
+                    map[i][x1]++;
+                }
+            } elif (y1 == y2) {
+                let top => ?(x1 < x2): x1 
+                            $_: x2;
+                let bottom => ?(x1 < x2): x2
+                            $_: x1;
+
+                for (i -> top:++bottom) {
+                    map[y1][i]++;
+                }
+            } else {
+                <> All diagonals are 45 degrees
+                let xdirection => ?(x1 < x2): 1 
+                                $_: -1;
+                let ydirection => ?(y1 < y2): 1
+                                $_: -1;
+                
+                for (i -> 0:++abs(y1 - y2)) {
+                    map[y1 + ydirection * i][x1 + xdirection * i]++;
+                }
+            }
+        }
+
+        <<
+        for (row <- map) {
+            for (i <- row) {
+                if (*i == 0) print(".");
+                else print(i);
+            }
+            print("\n");
+        }
+        <<
+
+        let count => 0;
+        for (j -> 0:y) {
+            for (i -> 0:x) {
+                if (*map[i][j] > 1) count += 1;
+            }
+        }
+        count
+    }
+
+    mthd stc main {
+        Logger::log("Day Five:");
+        Logger::indent();
+        Logger::log("Part One: " + DayFive::partOne());
+        Logger::log("Part Two: " + DayFive::partTwo());
+        Logger::outdent();
+    }
+}
+
 fn main<args #list> {
     DayOne::main();
     DayTwo::main();
     DayThree::main();
+    DayFour::main();
+    DayFive::main();
 }
